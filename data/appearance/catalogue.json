@@ -1,0 +1,161 @@
+{
+  "content_version": "phase1.adult.1",
+  "note": "Phase 1 placeholders for interchangeable adult appearance. These garments are not national, professional, or Ghanaian uniform standards.",
+  "identities": {
+    "adult_a": {"id": "adult_a", "label": "Placeholder Adult A"},
+    "adult_b": {"id": "adult_b", "label": "Placeholder Adult B"}
+  },
+  "skin_sets": {
+    "skin_warm": {
+      "id": "skin_warm",
+      "roughness": 0.55,
+      "placeholder_albedo": [0.62, 0.45, 0.36],
+      "albedo_texture": "",
+      "normal_texture": "",
+      "roughness_texture": ""
+    },
+    "skin_deep": {
+      "id": "skin_deep",
+      "roughness": 0.82,
+      "placeholder_albedo": [0.3, 0.22, 0.18],
+      "albedo_texture": "",
+      "normal_texture": "",
+      "roughness_texture": ""
+    }
+  },
+  "hair": {
+    "hair_short": {"id": "hair_short", "mesh": "short", "component_id": "component_hair_short"},
+    "hair_tied": {"id": "hair_tied", "mesh": "tied", "component_id": "component_hair_tied"}
+  },
+  "faces": {
+    "face_narrow": {"id": "face_narrow", "brow_height": 0.02, "jaw_width": 0.9, "nose_length": 0.08, "component_id": "component_face_narrow"},
+    "face_broad": {"id": "face_broad", "brow_height": 0.07, "jaw_width": 1.2, "nose_length": 0.13, "component_id": "component_face_broad"}
+  },
+  "proportions": {
+    "proportion_average": {
+      "id": "proportion_average",
+      "stature_m": 1.72,
+      "shoulder_scale": 1.0,
+      "hip_scale": 1.0,
+      "leg_scale": 1.0,
+      "torso_scale": 1.0
+    }
+  },
+  "components": {
+    "component_body": {"id": "component_body", "slot": "body", "kind": "body"},
+    "component_hair_short": {"id": "component_hair_short", "slot": "hair", "kind": "hair"},
+    "component_hair_tied": {"id": "component_hair_tied", "slot": "hair", "kind": "hair"},
+    "component_face_narrow": {"id": "component_face_narrow", "slot": "face", "kind": "face"},
+    "component_face_broad": {"id": "component_face_broad", "slot": "face", "kind": "face"}
+  },
+  "garments": {
+    "placeholder_base_layer": {
+      "id": "placeholder_base_layer",
+      "display_name": "Placeholder base layer",
+      "slot": "base",
+      "mesh_kind": "base",
+      "albedo": [0.9, 0.9, 0.86],
+      "limitation": "Outside the fully tested range the base layer is expected to gap at the shoulder and hip. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder garment. Not a national or professional uniform standard."
+    },
+    "placeholder_scrub_top": {
+      "id": "placeholder_scrub_top",
+      "display_name": "Placeholder scrub top",
+      "slot": "uniform_upper",
+      "covers": ["base"],
+      "mesh_kind": "scrub_top",
+      "albedo": [0.2, 0.45, 0.62],
+      "limitation": "Outside the fully tested range the scrub top shoulder and hem are expected to clip. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder garment. Not a national or professional uniform standard."
+    },
+    "placeholder_scrub_trousers": {
+      "id": "placeholder_scrub_trousers",
+      "display_name": "Placeholder scrub trousers",
+      "slot": "uniform_lower",
+      "mesh_kind": "scrub_trousers",
+      "albedo": [0.16, 0.38, 0.54],
+      "limitation": "Outside the fully tested range the scrub trouser rise and hem are expected to clip. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder garment. Not a national or professional uniform standard."
+    },
+    "placeholder_dress": {
+      "id": "placeholder_dress",
+      "display_name": "Placeholder dress",
+      "slot": "dress",
+      "occupies": ["uniform_upper", "uniform_lower"],
+      "covers": ["base"],
+      "mesh_kind": "dress",
+      "albedo": [0.45, 0.52, 0.4],
+      "limitation": "Outside the fully tested range the dress shoulder and hem are expected to clip. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder garment. Not a national or professional uniform standard."
+    },
+    "placeholder_apron": {
+      "id": "placeholder_apron",
+      "display_name": "Placeholder apron",
+      "slot": "outer",
+      "covers": ["uniform_upper", "dress"],
+      "requires_any_of": ["uniform_upper", "dress"],
+      "mesh_kind": "apron",
+      "albedo": [0.82, 0.82, 0.78],
+      "limitation": "Outside the fully tested range the apron bib and waist are expected to sit away from the body. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder garment. Not a national or professional uniform standard."
+    },
+    "placeholder_belt": {
+      "id": "placeholder_belt",
+      "display_name": "Placeholder belt",
+      "slot": "belt",
+      "mesh_kind": "belt",
+      "albedo": [0.28, 0.22, 0.16],
+      "limitation": "Outside the fully tested range the belt length is expected to gap or overlap. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder garment. Not a national or professional uniform standard."
+    },
+    "placeholder_footwear": {
+      "id": "placeholder_footwear",
+      "display_name": "Placeholder footwear",
+      "slot": "footwear",
+      "mesh_kind": "footwear",
+      "albedo": [0.18, 0.18, 0.18],
+      "limitation": "Outside the fully tested range the footwear is expected to miss the ankle. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder garment. Not a national or professional uniform standard."
+    },
+    "placeholder_name_badge": {
+      "id": "placeholder_name_badge",
+      "display_name": "Placeholder name badge",
+      "slot": "accessory",
+      "mesh_kind": "badge",
+      "albedo": [0.85, 0.85, 0.8],
+      "limitation": "Outside the fully tested range the badge sits off the chest anchor. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder accessory. Not an official badge, rank, or insignia."
+    }
+  },
+  "default_appearance": {
+    "identity_id": "adult_a",
+    "skin_set_id": "skin_warm",
+    "hair_id": "hair_short",
+    "facial_id": "face_narrow",
+    "proportion_id": "proportion_average",
+    "clothing": {
+      "base": "placeholder_base_layer",
+      "uniform_upper": "placeholder_scrub_top",
+      "uniform_lower": "placeholder_scrub_trousers",
+      "belt": "placeholder_belt",
+      "footwear": "placeholder_footwear",
+      "accessory": "placeholder_name_badge"
+    }
+  }
+}

@@ -1,0 +1,81 @@
+[gd_scene load_steps=11 format=3]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_energy = 1.0
+
+[sub_resource type="BoxShape3D" id="FloorShape"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="BoxMesh" id="FloorMesh"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="StandardMaterial3D" id="FloorMat"]
+albedo_color = Color(0.34, 0.42, 0.32, 1)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="MarkerShape"]
+size = Vector3(1.2, 1.2, 1.2)
+
+[sub_resource type="BoxMesh" id="MarkerMesh"]
+size = Vector3(1.2, 1.2, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="NearMat"]
+albedo_color = Color(0.45, 0.38, 0.28, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="FarMat"]
+albedo_color = Color(0.32, 0.38, 0.48, 1)
+roughness = 1.0
+
+[node name="TestYard" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.383022, 0.321394, 0, 0.642788, 0.766044, -0.5, -0.663414, 0.55667, 0, 8, 0)
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("FloorShape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("FloorMesh")
+surface_material_override/0 = SubResource("FloorMat")
+
+[node name="MarkerNear" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.6, -6)
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MarkerNear"]
+shape = SubResource("MarkerShape")
+
+[node name="Mesh" type="MeshInstance3D" parent="MarkerNear"]
+mesh = SubResource("MarkerMesh")
+surface_material_override/0 = SubResource("NearMat")
+
+[node name="MarkerFar" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.6, 8)
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MarkerFar"]
+shape = SubResource("MarkerShape")
+
+[node name="Mesh" type="MeshInstance3D" parent="MarkerFar"]
+mesh = SubResource("MarkerMesh")
+surface_material_override/0 = SubResource("FarMat")
