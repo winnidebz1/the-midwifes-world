@@ -1,5 +1,5 @@
 {
-  "content_version": "phase1.adult.1",
+  "content_version": "phase1.adult.1.1",
   "note": "Phase 1 placeholders for interchangeable adult appearance. These garments are not national, professional, or Ghanaian uniform standards.",
   "identities": {
     "adult_a": {"id": "adult_a", "label": "Placeholder Adult A"},
@@ -56,7 +56,7 @@
       "mesh_kind": "base",
       "albedo": [0.9, 0.9, 0.86],
       "limitation": "Outside the fully tested range the base layer is expected to gap at the shoulder and hip. No corrective shapes are authored.",
-      "content_version": "phase1.adult.1",
+      "content_version": "phase1.adult.1.1",
       "evidence_status": "placeholder",
       "note": "Placeholder garment. Not a national or professional uniform standard."
     },
@@ -65,10 +65,11 @@
       "display_name": "Placeholder scrub top",
       "slot": "uniform_upper",
       "covers": ["base"],
+      "covered_regions": ["torso"],
       "mesh_kind": "scrub_top",
       "albedo": [0.2, 0.45, 0.62],
       "limitation": "Outside the fully tested range the scrub top shoulder and hem are expected to clip. No corrective shapes are authored.",
-      "content_version": "phase1.adult.1",
+      "content_version": "phase1.adult.1.1",
       "evidence_status": "placeholder",
       "note": "Placeholder garment. Not a national or professional uniform standard."
     },
@@ -76,10 +77,12 @@
       "id": "placeholder_scrub_trousers",
       "display_name": "Placeholder scrub trousers",
       "slot": "uniform_lower",
+      "covers": ["base"],
+      "covered_regions": ["leg_left", "leg_right"],
       "mesh_kind": "scrub_trousers",
       "albedo": [0.16, 0.38, 0.54],
       "limitation": "Outside the fully tested range the scrub trouser rise and hem are expected to clip. No corrective shapes are authored.",
-      "content_version": "phase1.adult.1",
+      "content_version": "phase1.adult.1.1",
       "evidence_status": "placeholder",
       "note": "Placeholder garment. Not a national or professional uniform standard."
     },
@@ -89,10 +92,11 @@
       "slot": "dress",
       "occupies": ["uniform_upper", "uniform_lower"],
       "covers": ["base"],
+      "covered_regions": ["torso", "leg_left", "leg_right"],
       "mesh_kind": "dress",
       "albedo": [0.45, 0.52, 0.4],
       "limitation": "Outside the fully tested range the dress shoulder and hem are expected to clip. No corrective shapes are authored.",
-      "content_version": "phase1.adult.1",
+      "content_version": "phase1.adult.1.1",
       "evidence_status": "placeholder",
       "note": "Placeholder garment. Not a national or professional uniform standard."
     },
@@ -101,11 +105,12 @@
       "display_name": "Placeholder apron",
       "slot": "outer",
       "covers": ["uniform_upper", "dress"],
+      "covered_regions": ["torso"],
       "requires_any_of": ["uniform_upper", "dress"],
       "mesh_kind": "apron",
       "albedo": [0.82, 0.82, 0.78],
       "limitation": "Outside the fully tested range the apron bib and waist are expected to sit away from the body. No corrective shapes are authored.",
-      "content_version": "phase1.adult.1",
+      "content_version": "phase1.adult.1.1",
       "evidence_status": "placeholder",
       "note": "Placeholder garment. Not a national or professional uniform standard."
     },
@@ -116,7 +121,7 @@
       "mesh_kind": "belt",
       "albedo": [0.28, 0.22, 0.16],
       "limitation": "Outside the fully tested range the belt length is expected to gap or overlap. No corrective shapes are authored.",
-      "content_version": "phase1.adult.1",
+      "content_version": "phase1.adult.1.1",
       "evidence_status": "placeholder",
       "note": "Placeholder garment. Not a national or professional uniform standard."
     },
@@ -127,7 +132,7 @@
       "mesh_kind": "footwear",
       "albedo": [0.18, 0.18, 0.18],
       "limitation": "Outside the fully tested range the footwear is expected to miss the ankle. No corrective shapes are authored.",
-      "content_version": "phase1.adult.1",
+      "content_version": "phase1.adult.1.1",
       "evidence_status": "placeholder",
       "note": "Placeholder garment. Not a national or professional uniform standard."
     },
@@ -135,10 +140,23 @@
       "id": "placeholder_name_badge",
       "display_name": "Placeholder name badge",
       "slot": "accessory",
+      "socket": "chest",
       "mesh_kind": "badge",
       "albedo": [0.85, 0.85, 0.8],
       "limitation": "Outside the fully tested range the badge sits off the chest anchor. No corrective shapes are authored.",
-      "content_version": "phase1.adult.1",
+      "content_version": "phase1.adult.1.1",
+      "evidence_status": "placeholder",
+      "note": "Placeholder accessory. Not an official badge, rank, or insignia."
+    },
+    "placeholder_wrist_band": {
+      "id": "placeholder_wrist_band",
+      "display_name": "Placeholder wrist band",
+      "slot": "accessory",
+      "socket": "wrist",
+      "mesh_kind": "wrist",
+      "albedo": [0.42, 0.44, 0.48],
+      "limitation": "Outside the fully tested range the wrist band is expected to sit off the wrist bone. No corrective shapes are authored.",
+      "content_version": "phase1.adult.1.1",
       "evidence_status": "placeholder",
       "note": "Placeholder accessory. Not an official badge, rank, or insignia."
     }

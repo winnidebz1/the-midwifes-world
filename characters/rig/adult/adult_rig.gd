@@ -20,6 +20,7 @@ var _bones: Dictionary = {}
 var _attachments: Dictionary = {}
 var _garment_nodes: Dictionary = {}
 var _garment_materials: Dictionary = {}
+var _clothing_surfaces: Array[Dictionary] = []
 var _hair_nodes: Dictionary = {}
 var _brow: MeshInstance3D
 var _jaw: MeshInstance3D
@@ -54,7 +55,8 @@ func apply_profile(next: AppearanceProfile) -> Dictionary:
 		_catalogue.garments,
 		profile.stature_m,
 		profile.shoulder_scale,
-		profile.hip_scale
+		profile.hip_scale,
+		_catalogue.invalid_reasons
 	)
 	_show_equipped(resolved["equipped"])
 	profile.compatibility = resolved["results"]
@@ -122,6 +124,13 @@ func garment_visible(garment_id: String) -> bool:
 	for node in _garment_nodes[garment_id]:
 		if (node as MeshInstance3D).visible:
 			return true
+	return false
+
+
+func region_visible(garment_id: String, region: String) -> bool:
+	for surface in _clothing_surfaces:
+		if str(surface["garment_id"]) == garment_id and str(surface["region"]) == region:
+			return (surface["node"] as MeshInstance3D).visible
 	return false
 
 
@@ -240,11 +249,33 @@ func _apply_proportions() -> void:
 func _show_equipped(equipped: Dictionary) -> void:
 	var shown: Dictionary = {}
 	for slot in equipped.keys():
-		shown[str(equipped[slot])] = true
-	for garment_id in _garment_nodes.keys():
-		var visible: bool = shown.has(garment_id)
-		for node in _garment_nodes[garment_id]:
-			(node as MeshInstance3D).visible = visible
+		if str(slot) == "accessories":
+			for garment_id in equipped[slot]:
+				shown[str(garment_id)] = true
+		else:
+			shown[str(equipped[slot])] = true
+	for surface in _clothing_surfaces:
+		(surface["node"] as MeshInstance3D).visible = shown.has(str(surface["garment_id"]))
+	for surface in _clothing_surfaces:
+		var mesh_node := surface["node"] as MeshInstance3D
+		if not mesh_node.visible:
+			continue
+		if _surface_is_covered(surface, shown):
+			mesh_node.visible = false
+
+
+func _surface_is_covered(surface: Dictionary, shown: Dictionary) -> bool:
+	for other_id in shown.keys():
+		if str(other_id) == str(surface["garment_id"]):
+			continue
+		var other: GarmentDefinition = _catalogue.garments.get(str(other_id))
+		if other == null:
+			continue
+		if not other.covers.has(str(surface["slot"])):
+			continue
+		if other.covered_regions.has(str(surface["region"])):
+			return true
+	return false
 
 
 func _appearance_missing(clothing_missing: PackedStringArray) -> PackedStringArray:
@@ -313,24 +344,30 @@ func _build_garment_meshes() -> void:
 		var garment: GarmentDefinition = _catalogue.garments[garment_id]
 		match garment.mesh_kind:
 			"base":
-				_register(garment, "Chest", _box(0.3, 0.34, 0.15), Transform3D(Basis.IDENTITY, Vector3(0, -0.08, 0)))
+				_register(garment, "Chest", _box(0.28, 0.28, 0.14), Transform3D(Basis.IDENTITY, Vector3(0, -0.02, 0)), "torso")
+				_register(garment, "UpperArmL", _box(0.08, 0.2, 0.08), Transform3D(Basis.IDENTITY, Vector3(0, -0.02, 0)), "sleeve_left")
+				_register(garment, "UpperArmR", _box(0.08, 0.2, 0.08), Transform3D(Basis.IDENTITY, Vector3(0, -0.02, 0)), "sleeve_right")
+				_register(garment, "UpperLegL", _box(0.1, 0.36, 0.1), Transform3D(Basis.IDENTITY, Vector3(0, -0.16, 0)), "leg_left")
+				_register(garment, "UpperLegR", _box(0.1, 0.36, 0.1), Transform3D(Basis.IDENTITY, Vector3(0, -0.16, 0)), "leg_right")
 			"scrub_top":
-				_register(garment, "Chest", _box(0.36, 0.42, 0.2), Transform3D(Basis.IDENTITY, Vector3(0, -0.06, 0)))
+				_register(garment, "Chest", _box(0.36, 0.42, 0.2), Transform3D(Basis.IDENTITY, Vector3(0, -0.06, 0)), "torso")
 			"scrub_trousers":
-				_register(garment, "UpperLegL", _box(0.11, 0.72, 0.12), Transform3D(Basis.IDENTITY, Vector3(0, -0.36, 0)))
-				_register(garment, "UpperLegR", _box(0.11, 0.72, 0.12), Transform3D(Basis.IDENTITY, Vector3(0, -0.36, 0)))
+				_register(garment, "UpperLegL", _box(0.11, 0.72, 0.12), Transform3D(Basis.IDENTITY, Vector3(0, -0.36, 0)), "leg_left")
+				_register(garment, "UpperLegR", _box(0.11, 0.72, 0.12), Transform3D(Basis.IDENTITY, Vector3(0, -0.36, 0)), "leg_right")
 			"dress":
-				_register(garment, "Chest", _box(0.38, 0.4, 0.22), Transform3D(Basis.IDENTITY, Vector3(0, -0.04, 0)))
-				_register(garment, "Pelvis", _box(0.4, 0.7, 0.24), Transform3D(Basis.IDENTITY, Vector3(0, -0.42, 0)))
+				_register(garment, "Chest", _box(0.38, 0.4, 0.22), Transform3D(Basis.IDENTITY, Vector3(0, -0.04, 0)), "torso")
+				_register(garment, "Pelvis", _box(0.4, 0.7, 0.24), Transform3D(Basis.IDENTITY, Vector3(0, -0.42, 0)), "legs")
 			"apron":
-				_register(garment, "Chest", _box(0.28, 0.72, 0.02), Transform3D(Basis.IDENTITY, Vector3(0, -0.28, -0.14)))
+				_register(garment, "Chest", _box(0.28, 0.72, 0.02), Transform3D(Basis.IDENTITY, Vector3(0, -0.28, -0.14)), "torso")
 			"belt":
-				_register(garment, "Pelvis", _box(0.34, 0.05, 0.2), Transform3D(Basis.IDENTITY, Vector3(0, 0.08, 0)))
+				_register(garment, "Pelvis", _box(0.34, 0.05, 0.2), Transform3D(Basis.IDENTITY, Vector3(0, 0.08, 0)), "waist")
 			"footwear":
-				_register(garment, "LowerLegL", _box(0.1, 0.06, 0.16), Transform3D(Basis.IDENTITY, Vector3(0, -0.38, -0.03)))
-				_register(garment, "LowerLegR", _box(0.1, 0.06, 0.16), Transform3D(Basis.IDENTITY, Vector3(0, -0.38, -0.03)))
+				_register(garment, "LowerLegL", _box(0.1, 0.06, 0.16), Transform3D(Basis.IDENTITY, Vector3(0, -0.38, -0.03)), "foot_left")
+				_register(garment, "LowerLegR", _box(0.1, 0.06, 0.16), Transform3D(Basis.IDENTITY, Vector3(0, -0.38, -0.03)), "foot_right")
 			"badge":
-				_register(garment, "Chest", _box(0.06, 0.04, 0.01), Transform3D(Basis.IDENTITY, Vector3(-0.1, 0.06, -0.11)))
+				_register(garment, "Chest", _box(0.06, 0.04, 0.01), Transform3D(Basis.IDENTITY, Vector3(-0.1, 0.06, -0.11)), "chest")
+			"wrist":
+				_register(garment, "LowerArmL", _box(0.07, 0.04, 0.07), Transform3D(Basis.IDENTITY, Vector3(0, -0.16, 0)), "wrist")
 
 
 func _build_animations() -> void:
@@ -351,6 +388,11 @@ func _clip(length: float, looping: bool, left_swing: float, right_swing: float) 
 	animation.loop_mode = Animation.LOOP_LINEAR if looping else Animation.LOOP_NONE
 	_rotation_track(animation, "Skeleton:UpperLegL", length, left_swing)
 	_rotation_track(animation, "Skeleton:UpperLegR", length, right_swing)
+	_rotation_track(animation, "Skeleton:LowerLegL", length, -left_swing * 0.55)
+	_rotation_track(animation, "Skeleton:LowerLegR", length, -right_swing * 0.55)
+	_rotation_track(animation, "Skeleton:UpperArmL", length, -left_swing * 0.7)
+	_rotation_track(animation, "Skeleton:UpperArmR", length, -right_swing * 0.7)
+	_rotation_track(animation, "Skeleton:Spine", length, left_swing * 0.2)
 	return animation
 
 
@@ -386,17 +428,24 @@ func _add_plain(bone_name: String, part_name: String, mesh: Mesh, local: Transfo
 	return instance
 
 
-func _register(garment: GarmentDefinition, bone_name: String, mesh: Mesh, local: Transform3D) -> void:
+func _register(garment: GarmentDefinition, bone_name: String, mesh: Mesh, local: Transform3D, region: String) -> void:
 	if not _garment_materials.has(garment.garment_id):
 		var material := StandardMaterial3D.new()
 		material.albedo_color = garment.albedo
 		material.roughness = 0.75
 		_garment_materials[garment.garment_id] = material
-	var instance := _add_mesh(bone_name, garment.garment_id, mesh, local, _garment_materials[garment.garment_id])
+	var instance := _add_mesh(bone_name, "%s_%s" % [garment.garment_id, region], mesh, local, _garment_materials[garment.garment_id])
 	instance.visible = false
 	if not _garment_nodes.has(garment.garment_id):
 		_garment_nodes[garment.garment_id] = []
 	_garment_nodes[garment.garment_id].append(instance)
+	_clothing_surfaces.append({
+		"node": instance,
+		"garment_id": garment.garment_id,
+		"slot": garment.slot,
+		"region": region,
+		"bone": bone_name,
+	})
 
 
 func _add_mesh(bone_name: String, part_name: String, mesh: Mesh, local: Transform3D, material: Material) -> MeshInstance3D:

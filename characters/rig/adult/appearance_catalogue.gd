@@ -4,6 +4,7 @@ extends RefCounted
 const CATALOGUE_PATH := "res://data/appearance/catalogue.json"
 
 var garments: Dictionary = {}
+var invalid_reasons: Dictionary = {}
 var identities: Dictionary = {}
 var skin_sets: Dictionary = {}
 var hair_sets: Dictionary = {}
@@ -23,7 +24,9 @@ func load_from_project() -> void:
 		push_error("Appearance catalogue did not parse.")
 		return
 	var data: Dictionary = parsed
-	garments = _garments(data.get("garments", {}))
+	var parsed_garments := _garments(data.get("garments", {}))
+	garments = parsed_garments["valid"]
+	invalid_reasons = parsed_garments["invalid"]
 	identities = data.get("identities", {})
 	skin_sets = data.get("skin_sets", {})
 	hair_sets = data.get("hair", {})
@@ -52,45 +55,87 @@ func make_default_profile() -> AppearanceProfile:
 	return profile
 
 
+func classify_entry(record_key: String, entry: Dictionary) -> Dictionary:
+	var garment := _fill_garment(record_key, entry)
+	var errors := garment.validation_errors()
+	return {"garment": garment, "errors": errors, "valid": errors.is_empty()}
+
+
 func _garments(raw: Dictionary) -> Dictionary:
-	var built := {}
+	var valid := {}
+	var invalid := {}
 	for key in raw.keys():
-		var entry: Dictionary = raw[key]
-		var garment := GarmentDefinition.new()
-		garment.garment_id = str(entry.get("id", key))
-		garment.display_name = str(entry.get("display_name", garment.garment_id))
-		garment.slot = str(entry.get("slot", ""))
-		garment.occupies = _strings(entry.get("occupies", []))
-		garment.covers = _strings(entry.get("covers", []))
-		garment.requires_any_of = _strings(entry.get("requires_any_of", []))
-		garment.stature_full = _span(entry.get("stature_full", [1.6, 1.85]))
-		garment.stature_limited = _span(entry.get("stature_limited", [1.5, 1.95]))
-		garment.shoulder_full = _span(entry.get("shoulder_full", [0.92, 1.08]))
-		garment.shoulder_limited = _span(entry.get("shoulder_limited", [0.85, 1.2]))
-		garment.hip_full = _span(entry.get("hip_full", [0.92, 1.08]))
-		garment.hip_limited = _span(entry.get("hip_limited", [0.85, 1.2]))
-		garment.limitation = str(entry.get("limitation", ""))
-		garment.content_version = str(entry.get("content_version", AppearanceProfile.CONTENT_VERSION))
-		garment.evidence_status = str(entry.get("evidence_status", "placeholder"))
-		garment.note = str(entry.get("note", garment.note))
-		garment.mesh_kind = str(entry.get("mesh_kind", "box"))
-		garment.albedo = _color(entry.get("albedo", [0.75, 0.75, 0.75]))
-		built[garment.garment_id] = garment
-	return built
+		if typeof(raw[key]) != TYPE_DICTIONARY:
+			invalid[str(key)] = PackedStringArray(["garment record must be an object"])
+			continue
+		var classified := classify_entry(str(key), raw[key])
+		var garment: GarmentDefinition = classified["garment"]
+		var errors: PackedStringArray = classified["errors"]
+		var storage_id := garment.garment_id if not garment.garment_id.is_empty() else str(key)
+		if errors.is_empty():
+			valid[garment.garment_id] = garment
+		else:
+			invalid[storage_id] = errors
+	return {"valid": valid, "invalid": invalid}
 
 
-func _strings(values: Variant) -> PackedStringArray:
+func _fill_garment(record_key: String, entry: Dictionary) -> GarmentDefinition:
+	var garment := GarmentDefinition.new()
+	var notes := PackedStringArray()
+	if entry.has("id") and typeof(entry["id"]) == TYPE_STRING:
+		garment.garment_id = str(entry["id"])
+	garment.display_name = str(entry.get("display_name", garment.garment_id if not garment.garment_id.is_empty() else record_key))
+	garment.slot = str(entry["slot"]) if entry.has("slot") and typeof(entry["slot"]) == TYPE_STRING else ""
+	garment.socket = str(entry["socket"]) if entry.has("socket") and typeof(entry["socket"]) == TYPE_STRING else ""
+	garment.occupies = _string_list(entry, "occupies", notes)
+	garment.covers = _string_list(entry, "covers", notes)
+	garment.covered_regions = _string_list(entry, "covered_regions", notes)
+	garment.requires_any_of = _string_list(entry, "requires_any_of", notes)
+	garment.stature_full = _range_field(entry, "stature_full", GarmentDefinition.DEFAULT_STATURE_FULL, notes)
+	garment.stature_limited = _range_field(entry, "stature_limited", GarmentDefinition.DEFAULT_STATURE_LIMITED, notes)
+	garment.shoulder_full = _range_field(entry, "shoulder_full", GarmentDefinition.DEFAULT_SHOULDER_FULL, notes)
+	garment.shoulder_limited = _range_field(entry, "shoulder_limited", GarmentDefinition.DEFAULT_SHOULDER_LIMITED, notes)
+	garment.hip_full = _range_field(entry, "hip_full", GarmentDefinition.DEFAULT_HIP_FULL, notes)
+	garment.hip_limited = _range_field(entry, "hip_limited", GarmentDefinition.DEFAULT_HIP_LIMITED, notes)
+	garment.limitation = str(entry.get("limitation", ""))
+	garment.content_version = str(entry["content_version"]) if entry.has("content_version") and typeof(entry["content_version"]) == TYPE_STRING else ""
+	if garment.content_version.is_empty() and not entry.has("content_version"):
+		garment.content_version = AppearanceProfile.CONTENT_VERSION
+	garment.evidence_status = str(entry.get("evidence_status", "placeholder"))
+	garment.note = str(entry.get("note", garment.note))
+	garment.mesh_kind = str(entry.get("mesh_kind", "box"))
+	garment.albedo = _color(entry.get("albedo", [0.75, 0.75, 0.75]))
+	garment.metadata_errors = notes
+	return garment
+
+
+func _string_list(entry: Dictionary, key: String, notes: PackedStringArray) -> PackedStringArray:
 	var packed := PackedStringArray()
-	if values is Array:
-		for value in values:
-			packed.append(str(value))
+	if not entry.has(key):
+		return packed
+	if typeof(entry[key]) != TYPE_ARRAY:
+		notes.append("%s must be an array of strings" % key)
+		return packed
+	for value in entry[key]:
+		if typeof(value) != TYPE_STRING:
+			notes.append("%s contains a non-string value" % key)
+			continue
+		packed.append(str(value))
 	return packed
 
 
-func _span(values: Variant) -> Vector2:
-	if values is Array and values.size() >= 2:
-		return Vector2(float(values[0]), float(values[1]))
-	return Vector2.ZERO
+func _range_field(entry: Dictionary, key: String, fallback: Vector2, notes: PackedStringArray) -> Vector2:
+	if not entry.has(key):
+		return fallback
+	var values: Variant = entry[key]
+	if typeof(values) != TYPE_ARRAY or values.size() < 2 or not _is_number(values[0]) or not _is_number(values[1]):
+		notes.append("%s must be a min,max number pair" % key)
+		return Vector2(1, 1)
+	return Vector2(float(values[0]), float(values[1]))
+
+
+func _is_number(value: Variant) -> bool:
+	return typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT
 
 
 func _color(values: Variant) -> Color:

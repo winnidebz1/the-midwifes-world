@@ -130,19 +130,24 @@ The player keeps four movement states: idle, walk, run, and jump. Horizontal spe
 
 Appearance records live in `data/appearance/catalogue.json`. The working selection is an `AppearanceProfile`: identity, skin, hair, face, body proportions, clothing slots, compatibility results, missing ids, and schema, content, and skeleton versions. `body_state` is stored as `none`. Phase 1 does not change the mesh from that field.
 
-Clothing slots are `base`, `uniform_upper`, `uniform_lower`, `dress`, `outer`, `belt`, `footwear`, and `accessory`. `ClothingResolver` returns one of three levels for each requested id:
+Clothing slots are `base`, `uniform_upper`, `uniform_lower`, `dress`, `outer`, `belt`, and `footwear`. Accessories are separate from those slots. A single `accessory` string and an `accessories` array are both accepted, and each accessory id is stored and restored on its own. An accessory claims one exclusive socket. The shipped sockets are `chest` and `wrist`. Requested accessory ids are sorted before a socket is assigned, so the same request always keeps the same owner. A second accessory for a socket that is already taken stays in the selection.
+
+`ClothingResolver` returns one of four levels for each requested id:
 
 | Level | Meaning |
 | --- | --- |
-| `compatible` | The garment passes the tested stature, shoulder, and hip range, and no occupied slot rejects it |
+| `compatible` | The garment passes the tested stature, shoulder, and hip range, and no occupied slot or exclusive socket rejects it |
 | `compatible_with_limitations` | The garment is inside the limited range, or an outer layer has no uniform or dress under it. The reason text is kept |
-| `incompatible` | The body is outside the tested range, the id is missing, the slot does not match, or another garment occupies the slot. The reason names the garment and the range or the occupying id |
+| `incompatible` | The body is outside the tested range, the catalogue id is missing, the slot does not match, another garment occupies the slot, or the exclusive socket is already taken. The reason names that cause |
+| `invalid_content` | The catalogue record itself is invalid. A missing content id, missing required metadata such as a dress `occupies` list, or a reversed or empty proportion range is catalogue content, distinct from a body that does not fit a valid garment |
+
+`covers` lists the slots a garment can hide, and `covered_regions` lists the surfaces within those slots. A surface is hidden only when both match. A region that is not listed stays visible. The shipped dress covers the base torso and both base legs and leaves both sleeves visible. The shipped apron covers the torso of a uniform top or a dress and leaves the dress skirt and the scrub trousers visible.
 
 A rejected id stays in the saved selection. The resolver does not substitute a different garment. A missing skin id keeps that id and shows a neutral grey material that is not one of the catalogue skin sets. Schema version `1` and rig family `humanoid_adult_1` are required. Any other schema or rig family leaves the current appearance in place.
 
 The yard writes the profile to `user://the_midwifes_world/adult_appearance.json` when `scenes/prototype.gd` leaves the tree. There is no save autoload. The garment records in the catalogue are cosmetic placeholders, with `evidence_status` set to `placeholder`.
 
-Measured frame cost for these placeholders is in [PHASE1_IMPLEMENTATION_REPORT.md](PHASE1_IMPLEMENTATION_REPORT.md).
+The original Phase 1 frame-time sample is in [PHASE1_IMPLEMENTATION_REPORT.md](PHASE1_IMPLEMENTATION_REPORT.md). The corrected reading is in [PHASE1_TECHNICAL_REVIEW.md](PHASE1_TECHNICAL_REVIEW.md).
 
 `Interactable` is still a later component. It will emit `interaction_started` with a reference to itself. The character script does not `get_node` into an NPC scene.
 

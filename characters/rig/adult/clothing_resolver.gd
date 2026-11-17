@@ -1,36 +1,112 @@
 class_name ClothingResolver
 extends RefCounted
 
-## Resolves a requested slot map against garment records and a proportion snapshot.
+## Resolves a requested clothing map. Invalid records and body conflicts use different levels.
+
+const SINGLE_SLOTS: PackedStringArray = [
+	"base", "uniform_upper", "uniform_lower", "dress", "outer", "belt", "footwear",
+]
 
 
-static func resolve(requested: Dictionary, garments: Dictionary, stature_m: float, shoulder_scale: float, hip_scale: float) -> Dictionary:
+static func resolve(requested: Dictionary, garments: Dictionary, stature_m: float, shoulder_scale: float, hip_scale: float, invalid_reasons: Dictionary = {}) -> Dictionary:
 	var passed: Dictionary = {}
 	var results: Array = []
 	var missing: PackedStringArray = PackedStringArray()
-	for slot_value in requested.keys():
-		var slot := str(slot_value)
-		var garment_id := str(requested[slot_value])
+	for slot in SINGLE_SLOTS:
+		if not requested.has(slot):
+			continue
+		var garment_id := str(requested[slot])
 		if garment_id.is_empty():
 			continue
-		var garment: GarmentDefinition = garments.get(garment_id)
-		if garment == null:
+		var outcome := _consider(garment_id, slot, garments, invalid_reasons, stature_m, shoulder_scale, hip_scale)
+		results.append(outcome["result"])
+		if outcome["missing"]:
 			missing.append(garment_id)
-			results.append(_result(garment_id, slot, "incompatible", "missing_content: %s is not in the installed catalogue and was not replaced." % garment_id, "", ""))
-			continue
-		if garment.slot != slot:
-			results.append(_result(garment_id, slot, "incompatible", "%s belongs in slot %s and was requested in %s. It was not moved to another slot." % [garment_id, garment.slot, slot], garment.content_version, garment.evidence_status))
-			continue
-		var fit := garment.fit_against(stature_m, shoulder_scale, hip_scale)
-		results.append(_result(garment_id, slot, str(fit["level"]), str(fit["reason"]), garment.content_version, garment.evidence_status))
-		if str(fit["level"]) != "incompatible":
-			passed[slot] = garment
+		if outcome["garment"] != null:
+			passed[slot] = outcome["garment"]
 	_apply_occupancy(passed, results)
 	_apply_requirements(passed, results)
+	var accessories := _accessory_ids(requested)
+	var sockets: Dictionary = {}
+	for garment_id in accessories:
+		var outcome := _consider(garment_id, "accessory", garments, invalid_reasons, stature_m, shoulder_scale, hip_scale)
+		var result: Dictionary = outcome["result"]
+		if outcome["missing"]:
+			missing.append(garment_id)
+		var garment: GarmentDefinition = outcome["garment"]
+		if garment != null and sockets.has(garment.socket):
+			var holder: String = sockets[garment.socket]
+			result["level"] = "incompatible"
+			result["reason"] = "Socket %s already holds %s, so %s stays off. It was not replaced with a different accessory." % [garment.socket, holder, garment_id]
+			garment = null
+		elif garment != null:
+			sockets[garment.socket] = garment_id
+		results.append(result)
 	var equipped := {}
-	for slot in passed.keys():
-		equipped[slot] = passed[slot].garment_id
+	var equipped_accessories: Array[String] = []
+	for slot in SINGLE_SLOTS:
+		if passed.has(slot):
+			equipped[slot] = passed[slot].garment_id
+	for socket in _sorted_keys(sockets):
+		equipped_accessories.append(str(sockets[socket]))
+	if not equipped_accessories.is_empty():
+		equipped["accessories"] = equipped_accessories
 	return {"equipped": equipped, "results": results, "missing_ids": missing}
+
+
+static func _accessory_ids(requested: Dictionary) -> PackedStringArray:
+	var ids := PackedStringArray()
+	if requested.has("accessory") and typeof(requested["accessory"]) == TYPE_STRING and not str(requested["accessory"]).is_empty():
+		ids.append(str(requested["accessory"]))
+	if requested.has("accessories") and requested["accessories"] is Array:
+		for value in requested["accessories"]:
+			var garment_id := str(value)
+			if not garment_id.is_empty() and not ids.has(garment_id):
+				ids.append(garment_id)
+	ids.sort()
+	return ids
+
+
+static func _consider(garment_id: String, slot: String, garments: Dictionary, invalid_reasons: Dictionary, stature_m: float, shoulder_scale: float, hip_scale: float) -> Dictionary:
+	if invalid_reasons.has(garment_id):
+		var listed: PackedStringArray = PackedStringArray(invalid_reasons[garment_id])
+		return {
+			"garment": null,
+			"missing": false,
+			"result": _result(garment_id, slot, "invalid_content", "Invalid catalogue content for %s: %s" % [garment_id, "; ".join(listed)], "", ""),
+		}
+	var garment: GarmentDefinition = garments.get(garment_id)
+	if garment == null:
+		return {
+			"garment": null,
+			"missing": true,
+			"result": _result(garment_id, slot, "incompatible", "missing_content: %s is not in the installed catalogue and was not replaced." % garment_id, "", ""),
+		}
+	var errors := garment.validation_errors()
+	if not errors.is_empty():
+		return {
+			"garment": null,
+			"missing": false,
+			"result": _result(garment_id, slot, "invalid_content", "Invalid catalogue content for %s: %s" % [garment_id, "; ".join(errors)], garment.content_version, garment.evidence_status),
+		}
+	if garment.slot != slot:
+		return {
+			"garment": null,
+			"missing": false,
+			"result": _result(garment_id, slot, "incompatible", "%s belongs in slot %s and was requested in %s. It was not moved to another slot." % [garment_id, garment.slot, slot], garment.content_version, garment.evidence_status),
+		}
+	var fit := garment.fit_against(stature_m, shoulder_scale, hip_scale)
+	if str(fit["level"]) == "incompatible":
+		return {
+			"garment": null,
+			"missing": false,
+			"result": _result(garment_id, slot, "incompatible", str(fit["reason"]), garment.content_version, garment.evidence_status),
+		}
+	return {
+		"garment": garment,
+		"missing": false,
+		"result": _result(garment_id, slot, str(fit["level"]), str(fit["reason"]), garment.content_version, garment.evidence_status),
+	}
 
 
 static func _apply_occupancy(passed: Dictionary, results: Array) -> void:
@@ -84,3 +160,11 @@ static func _result(garment_id: String, slot: String, level: String, reason: Str
 		"content_version": content_version,
 		"evidence_status": evidence_status,
 	}
+
+
+static func _sorted_keys(values: Dictionary) -> PackedStringArray:
+	var keys := PackedStringArray()
+	for key in values.keys():
+		keys.append(str(key))
+	keys.sort()
+	return keys

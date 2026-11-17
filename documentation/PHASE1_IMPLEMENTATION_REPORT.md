@@ -2,6 +2,8 @@
 
 Modular adult character foundation for The Midwife's World. Godot 4.7.2, Compatibility renderer. Measured on 17 November 2026.
 
+Phase 1.1 later corrected clothing covers, accessory sockets, catalogue validation, and malformed save handling. Those corrections and a second reading of this yard are in [PHASE1_TECHNICAL_REVIEW.md](PHASE1_TECHNICAL_REVIEW.md). The frame times below, and the single accessory slot named in the limitations, are the original Phase 1 readings.
+
 The long-term art target remains cinematic photorealism. Every mesh in this phase is a placeholder box or sphere. The numbers below describe that placeholder, together with the existing test yard.
 
 ## Git checkpoint
